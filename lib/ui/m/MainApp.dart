@@ -3,7 +3,6 @@ import 'package:the_third_bookkeeping/ui/m/HomePage.dart';
 import 'BillPage.dart';
 import 'SettingPaper.dart';
 import 'StatisticsPage.dart';
-
 class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -20,13 +19,17 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    const HomePage(),
-    const BillPage(),
-    const StatisticsPage(),
-    const SettingPaper(),
-  ];
+  late final List<Widget> _pages;
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HomePage(onTap: _onItemTapped),
+      const BillPage(),
+      const StatisticsPage(),
+      const SettingPaper(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
@@ -56,7 +59,6 @@ class _MainPageState extends State<MainPage> {
             Expanded(
               child: _pages[_selectedIndex],
             ),
-            // 改进后的底部导航栏
             BottomNavigationBar(
               items: <BottomNavigationBarItem>[
                 BottomNavigationBarItem(

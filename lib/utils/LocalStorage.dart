@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorage {
   static const isGuideKey = 'isGuideKey';
-
+  static const accountJson = 'accountJson';
   static final LocalStorage _instance = LocalStorage._internal();
   late SharedPreferences _prefs;
 

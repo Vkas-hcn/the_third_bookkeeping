@@ -11,8 +11,8 @@ import '../../utils/ZhiShou.dart';
 import '../g/Guide.dart';
 import 'CalendarWidget.dart';
 
-class BillPage extends StatelessWidget {
-  const BillPage({super.key});
+class ReportPage extends StatelessWidget {
+  const ReportPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +26,10 @@ class AddFeelPageScreen extends StatefulWidget {
   const AddFeelPageScreen({super.key});
 
   @override
-  _BillPageScressState createState() => _BillPageScressState();
+  _ReportPageScressState createState() => _ReportPageScressState();
 }
 
-class _BillPageScressState extends State<AddFeelPageScreen> {
+class _ReportPageScressState extends State<AddFeelPageScreen> {
   DateTime selectedDate = DateTime.now();
   String nowDate = '';
   String nowDateDay = '';
