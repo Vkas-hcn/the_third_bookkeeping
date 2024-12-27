@@ -258,16 +258,18 @@ class RecordBean {
 
     MonthData dayData = currentMonthRecord.monthlyData[day]!;
 
-    // 根据 type 来添加支出或收入
-    dayData.zhiShouList.add(ZhiShouData(
-      num: num,
-      isInCome: isInCome,
-      note: note,
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      icon: icon,
-      name: name,
-      date: dayString,
-    ));
+    dayData.zhiShouList.insert(
+      0,
+      ZhiShouData(
+        num: num,
+        isInCome: isInCome,
+        note: note,
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        icon: icon,
+        name: name,
+        date: dayString,
+      ),
+    );
 
     final String jsonStr =
         json.encode(records.map((record) => record.toJson()).toList());
