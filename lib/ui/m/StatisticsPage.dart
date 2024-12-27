@@ -667,13 +667,13 @@ class _StatisticsPageScressState extends State<AddFeelPageScreen> {
                               children: [
                                 Container(
                                   constraints: const BoxConstraints(
-                                    maxWidth: 50,
+                                    maxWidth: 100,
                                   ),
                                   child: Text(
                                     _expensesText[index],
-                                    maxLines: 2,
+                                    maxLines: 1,
                                     style: const TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 12,
                                       color: Color(0xFFF79766),
                                     ),
                                   ),
