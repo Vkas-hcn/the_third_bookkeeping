@@ -582,25 +582,35 @@ class _HomePageScressState extends State<HomePageScress>
                                               leading: Image.asset(item["icon"],
                                                   width: 40, height: 40),
                                               title: Text(item["name"]),
-                                              subtitle: Text(
-                                                  item["note"].isEmpty
-                                                      ? "none"
-                                                      : "${item["note"]}"),
+                                              subtitle: Container(
+                                                constraints: const BoxConstraints(
+                                                  maxWidth: 100,
+                                                ),
+                                                child: Text(
+                                                    item["note"].isEmpty
+                                                        ? "none"
+                                                        : "${item["note"]}"),
+                                              ),
                                               trailing: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 // 内容宽度自适应
                                                 children: [
-                                                  Text(
-                                                    "${item["isInCome"] ? "+" : "-"}${item["num"]}",
-                                                    style: TextStyle(
-                                                      color: item["isInCome"]
-                                                          ? const Color(
-                                                              0xFFA5BE69)
-                                                          : const Color(
-                                                              0xFFF79766),
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 24.0,
+                                                  Container(
+                                                    constraints: const BoxConstraints(
+                                                      maxWidth: 80,
+                                                    ),
+                                                    child: Text(
+                                                      "${item["isInCome"] ? "+" : "-"}${item["num"]}",
+                                                      style: TextStyle(
+                                                        color: item["isInCome"]
+                                                            ? const Color(
+                                                                0xFFA5BE69)
+                                                            : const Color(
+                                                                0xFFF79766),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 20.0,
+                                                      ),
                                                     ),
                                                   ),
                                                   const SizedBox(width: 8),

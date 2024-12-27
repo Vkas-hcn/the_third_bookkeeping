@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../utils/AccountData.dart';
 import '../../utils/LocalStorage.dart';
+import '../../utils/ThirdUtils.dart';
 import '../../utils/ZhiShou.dart';
 
 class StatisticsPage extends StatelessWidget {
@@ -31,17 +33,85 @@ class _StatisticsPageScressState extends State<AddFeelPageScreen> {
   String avgDaily = '0.0';
   String avgMonthly = '0.0';
   int staticTypeInt = 0; //0:All 1:Income 2:Expense
+  List<String> _expensesText = [];
+
   @override
   void initState() {
     super.initState();
     nowDateYear = DateFormat('yyyy').format(selectedDate);
     nowDateMonth = DateFormat('yyyy-MM').format(selectedDate);
     getStatisticData();
+    getAccData();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void getAccData() async {
+    if (staticTypeInt == 0) {
+      _expensesText = AccountData.dataTextZong;
+    } else if (staticTypeInt == 1) {
+      _expensesText = AccountData.incomeText;
+    } else {
+      _expensesText = AccountData.expensesText;
+    }
+    setState(() {});
+  }
+
+  String getImageData(index) {
+    List<String> listImage;
+    if (staticTypeInt == 0) {
+      listImage = AccountData.dataImageZong;
+    } else if (staticTypeInt == 1) {
+      listImage = AccountData.incomeImage;
+    } else {
+      listImage = AccountData.expensesImage;
+    }
+    return listImage[index];
+  }
+
+  Future<String> getTotalAmountBreakdown(String category) async {
+    // 统计分类总金额
+    double? summary = 0.0;
+    if (isMonthly) {
+      summary = await RecordBean.getCategoryTotal(nowDateMonth, category);
+    } else {
+      summary = await RecordBean.getCategoryTotalByYear(nowDateYear, category);
+    }
+    print("统计分类总金额---${category}----${summary}");
+    if (summary.isNaN || summary <= 0) {
+      return "0.0";
+    }
+    return "-${summary.toStringAsFixed(2)}";
+  }
+
+  Future<String> getTotalAmountPercentage(String category) async {
+    // 统计分类占比
+    try {
+      double? summary = 0.0;
+      double? to = 0.0;
+      bool isIncomeState = ThirdUtils.isIncome(category);
+      if (isMonthly) {
+        summary = await RecordBean.getCategoryTotal(nowDateMonth, category);
+        to = await RecordBean.getCategoryProportion(nowDateMonth, false,isIncomeState);
+      } else {
+        summary =
+            await RecordBean.getCategoryTotalByYear(nowDateYear, category);
+        to = await RecordBean.getCategoryProportion(nowDateYear, true,isIncomeState);
+      }
+      double bfb = ((summary / to) * 100);
+      if (bfb.isNaN) {
+        return "0%";
+      }
+      String cleanedString = bfb.toStringAsFixed(2).replaceAll('-', '');
+      print("统计分类总金额---${category}----${summary}----${to}----${bfb}");
+      return "${cleanedString}%";
+    } catch (e) {
+      print("Error parsing expense or budget: $e");
+      return "0%";
+    }
   }
 
   //切换时间维度
@@ -51,11 +121,13 @@ class _StatisticsPageScressState extends State<AddFeelPageScreen> {
     });
     getStatisticData();
   }
+
   void changeType(int state) {
     setState(() {
       staticTypeInt = state;
     });
     getStatisticData();
+    getAccData();
   }
 
   void getStatisticData() async {
@@ -70,6 +142,7 @@ class _StatisticsPageScressState extends State<AddFeelPageScreen> {
     print("This Year: ${statistics["This Year"]}");
     print("Avg. Monthly: ${statistics["Avg. Monthly"]}");
     print("Avg. Daily: ${statistics["Avg. Daily"]}");
+
     setState(() {
       yearData = statistics["This Year"].toString();
       avgDaily = statistics["Avg. Daily"].toString();
@@ -175,7 +248,6 @@ class _StatisticsPageScressState extends State<AddFeelPageScreen> {
     updateMonth(nowDateMonth);
     getStatisticData();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -534,7 +606,7 @@ class _StatisticsPageScressState extends State<AddFeelPageScreen> {
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              avgMonthly,
+                              avgDaily,
                               style: const TextStyle(
                                 fontFamily: 'sf',
                                 fontSize: 16,
@@ -548,6 +620,144 @@ class _StatisticsPageScressState extends State<AddFeelPageScreen> {
                   ),
                 ],
               ),
+              //网格布局
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12.0, right: 12),
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1.8,
+                    ),
+                    itemCount: _expensesText.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        width: 176,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFFE7E2E2),
+                            width: 1,
+                          ),
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: const Color(0xFFFFFCEF),
+                              ),
+                              child: SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: Image.asset(getImageData(index)),
+                              ),
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Container(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 50,
+                                  ),
+                                  child: Text(
+                                    _expensesText[index],
+                                    maxLines: 2,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFFF79766),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4), // 调整文本间距
+                                FutureBuilder<String>(
+                                  future: getTotalAmountBreakdown(
+                                      _expensesText[index]),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Text(
+                                        'Loading...',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: Color(0xFF101828),
+                                        ),
+                                      );
+                                    } else if (snapshot.hasError) {
+                                      return const Text(
+                                        'Something went wrong',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: Color(0xFF101828),
+                                        ),
+                                      );
+                                    } else {
+                                      return Container(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 70,
+                                        ),
+                                        child: Text(
+                                          snapshot.data ?? 'N/A',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            color: Color(0xFF101828),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: 4),
+                                FutureBuilder<String>(
+                                  future: getTotalAmountPercentage(
+                                      _expensesText[index]),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Text(
+                                        'Loading...',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF747688),
+                                        ),
+                                      );
+                                    } else if (snapshot.hasError) {
+                                      return const Text(
+                                        'Something went wrong',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF747688),
+                                        ),
+                                      );
+                                    } else {
+                                      return Text(
+                                        snapshot.data ?? 'N/A',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFF747688),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              )
             ],
           ),
         ),

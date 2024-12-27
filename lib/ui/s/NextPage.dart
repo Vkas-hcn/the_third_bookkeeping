@@ -25,15 +25,18 @@ class _NextPageScreenState extends State<NextPageScreen>
   bool restartState = false;
   final Duration checkInterval = const Duration(milliseconds: 500);
   bool startInt = false;
+  int currentPage = 0; // Track the current page index
+  final PageController _pageController = PageController(initialPage: 0);
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -41,8 +44,8 @@ class _NextPageScreenState extends State<NextPageScreen>
     LocalStorage().setGuideData("1");
     Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => ( MainApp())),
-        (route) => route == null);
+        MaterialPageRoute(builder: (context) => MainApp()),
+            (route) => route == null);
   }
 
   @override
@@ -52,46 +55,49 @@ class _NextPageScreenState extends State<NextPageScreen>
         onWillPop: () async => false,
         child: Stack(
           children: [
-            AnimatedOpacity(
-              opacity: startInt ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 500),
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/img/guide_2.webp'),
-                    fit: BoxFit.cover,
+            PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  currentPage = index;
+                });
+              },
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/img/guide_1.webp'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
-            ),
-            AnimatedOpacity(
-              opacity: startInt ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 500),
-              child: Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/img/guide_1.webp'),
-                    fit: BoxFit.cover,
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/img/guide_2.webp'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
             Column(
               children: [
                 const Spacer(),
                 GestureDetector(
                   onTap: () {
-                    if (!startInt) {
-                      setState(() {
-                        startInt = true;
-                      });
-                    }else{
+                    if (currentPage == 0) {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                      );
+                    } else {
                       pageToHome();
                     }
                   },
                   child: SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 150,
                     child: Image.asset('assets/img/ic_s_but.webp'),
                   ),
                 ),
@@ -105,46 +111,3 @@ class _NextPageScreenState extends State<NextPageScreen>
   }
 }
 
-class ProgressBar extends StatelessWidget {
-  final double progress;
-  final double height;
-  final double borderRadius;
-  final Color backgroundColor;
-  final Color progressColor;
-
-  ProgressBar({
-    required this.progress,
-    required this.height,
-    required this.borderRadius,
-    required this.backgroundColor,
-    required this.progressColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: height,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-      child: Stack(
-        children: [
-          Container(
-            width: double.infinity,
-            height: height,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(borderRadius),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

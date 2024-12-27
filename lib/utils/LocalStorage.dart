@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocalStorage {
   static const isGuideKey = 'isGuideKey';
   static const accountJson = 'accountJson';
+  static const accountYu = 'accountYu';
+
   static final LocalStorage _instance = LocalStorage._internal();
   late SharedPreferences _prefs;
 
@@ -45,5 +47,13 @@ class LocalStorage {
 
   Future<void> setGuideData(String data) async {
     await _prefs.setString(isGuideKey, data);
+  }
+
+  Future<String> getYuData() async {
+    return _prefs.getString(accountYu) ?? '0';
+  }
+
+  Future<void> setYuData(String data) async {
+    await _prefs.setString(accountYu, data);
   }
 }

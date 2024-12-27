@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../utils/ThirdUtils.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SettingPaper extends StatelessWidget {
   const SettingPaper({super.key});
@@ -87,6 +88,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                       const SizedBox(height: 16),
                       GestureDetector(
                         onTap: () {
+                          Share.share("https://book.flutterchina.club/chapter6/keepalive.html#_6-8-1-automatickeepalive");
                         },
                         child:  Center(
                           child: Row(
@@ -194,7 +196,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         ));
   }
 
-
   void launchPP() async {
     const url =
         'https://play.google.com/store/apps/details?id=com.blooming.unlimited.fast';
@@ -215,12 +216,5 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     }
   }
 
-  void restartApp(BuildContext context) {
-    Navigator.of(context).removeRoute(ModalRoute.of(context) as Route);
-    Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const SettingPaper()),
-        (route) => route == null);
-  }
 }
 

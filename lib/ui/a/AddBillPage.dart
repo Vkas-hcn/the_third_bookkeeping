@@ -40,6 +40,7 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
   void initState() {
     super.initState();
     getAccData();
+    preloadImages(); // 提前加载图片
   }
 
   @override
@@ -56,6 +57,17 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
   Future<String> getImageData(index) async {
     return ThirdUtils.getAccListImageData(isInCome)[index];
   }
+  List<String> _cachedImages = [];
+
+
+  /// 预加载图片并缓存
+  void preloadImages() async {
+    final List<String> images =
+    await Future.wait(List.generate(_expensesText.length, getImageData));
+    setState(() {
+      _cachedImages = images;
+    });
+  }
 
   void cheackIncome(bool state) {
     setState(() {
@@ -63,6 +75,7 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
       currentPageIndex = 0;
     });
     getAccData();
+    preloadImages();
   }
 
   void setNumToolTip(String value) {
@@ -91,6 +104,11 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
     RegExp regExp = RegExp(r'^[0-9]+(\.[0-9]+)?$');
     if (!regExp.hasMatch(_input)) {
       ThirdUtils.showToast("Please enter a valid number");
+      return;
+    }
+    double amount = double.parse(_input);
+    if(amount==0){
+      ThirdUtils.showToast("The amount is incorrect");
       return;
     }
     await addAccountFun(_input);
@@ -123,11 +141,12 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
           imageData,
           _expensesText[currentPageIndex]);
     } else {
+      String yuDef = await LocalStorage().getYuData();
       // 如果本地没有记录，创建一个新的记录
       RecordBean newRecord = RecordBean(
         monthlyData: {},
         dateMonth: formattedDate.substring(0, 7),
-        yu: '0',
+        yu: yuDef,
       );
       newRecord.addDataByDate(
           formattedDate,
@@ -221,6 +240,8 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
                             ),
                           ),
                         ),
+
+
                         SizedBox(
                           width: MediaQuery.of(context).size.width,
                           height: 220,
@@ -229,19 +250,16 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
                             itemCount: (_expensesText.length / 8).ceil(),
                             itemBuilder: (context, pageIndex) {
                               final startIndex = pageIndex * 8;
-                              final endIndex =
-                                  (startIndex + 8) > _expensesText.length
-                                      ? _expensesText.length
-                                      : startIndex + 8;
-                              final items =
-                                  _expensesText.sublist(startIndex, endIndex);
+                              final endIndex = (startIndex + 8) > _expensesText.length
+                                  ? _expensesText.length
+                                  : startIndex + 8;
+                              final items = _expensesText.sublist(startIndex, endIndex);
 
                               return SizedBox(
                                 height: 220,
                                 child: GridView.builder(
                                   physics: const NeverScrollableScrollPhysics(),
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 4,
                                     mainAxisSpacing: 2,
                                     crossAxisSpacing: 5,
@@ -256,48 +274,29 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
                                         });
                                       },
                                       child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          FutureBuilder<String>(
-                                            future: getImageData(actualIndex),
-                                            builder: (context, snapshot) {
-                                              if (snapshot.connectionState ==
-                                                  ConnectionState.done) {
-                                                if (snapshot.hasError) {
-                                                  return Text(
-                                                      'Error: ${snapshot.error}');
-                                                } else {
-                                                  return Container(
-                                                    padding: EdgeInsets.all(4),
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              160),
-                                                      color: currentPageIndex ==
-                                                              actualIndex
-                                                          ? Color(0xFFFFA25E)
-                                                          : Colors.transparent,
-                                                    ),
-                                                    child: SizedBox(
-                                                      width: 40,
-                                                      height: 40,
-                                                      child: Image.asset(
-                                                          snapshot.data!),
-                                                    ),
-                                                  );
-                                                }
-                                              } else {
-                                                return const CircularProgressIndicator();
-                                              }
-                                            },
+                                          Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(160),
+                                              color: currentPageIndex == actualIndex
+                                                  ? const Color(0xFFFFA25E)
+                                                  : Colors.transparent,
+                                            ),
+                                            child: SizedBox(
+                                              width: 40,
+                                              height: 40,
+                                              child: _cachedImages.isNotEmpty
+                                                  ? Image.asset(_cachedImages[actualIndex])
+                                                  : const CircularProgressIndicator(),
+                                            ),
                                           ),
                                           Text(
                                             items[index],
                                             style: TextStyle(
                                               fontSize: 10,
-                                              color: currentPageIndex ==
-                                                      actualIndex
+                                              color: currentPageIndex == actualIndex
                                                   ? const Color(0xFFF79766)
                                                   : const Color(0xFFAFABA8),
                                             ),
@@ -313,6 +312,9 @@ class _AddBillPageScressState extends State<AddFeelPageScreen> {
                             },
                           ),
                         ),
+
+
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [

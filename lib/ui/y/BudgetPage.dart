@@ -286,6 +286,7 @@ class _BudgetPageScressState extends State<AddFeelPageScreen> {
                         showBottomSheetWithInput(context, "Set Monthly Budget",
                             (value) {
                           if (value.isNotEmpty) {
+                            LocalStorage().setYuData(value.toString());
                             print("保存的数据：$value");
                             setMonthlyBudgetData(value);
                           }
@@ -499,7 +500,7 @@ class _BudgetPageScressState extends State<AddFeelPageScreen> {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
                                       return const Text(
-                                        '加载中...',
+                                        'Loading...',
                                         style: TextStyle(
                                           fontSize: 15,
                                           color: Color(0xFF101828),
@@ -507,18 +508,23 @@ class _BudgetPageScressState extends State<AddFeelPageScreen> {
                                       );
                                     } else if (snapshot.hasError) {
                                       return const Text(
-                                        '出错了',
+                                        'Something went wrong',
                                         style: TextStyle(
                                           fontSize: 15,
                                           color: Color(0xFF101828),
                                         ),
                                       );
                                     } else {
-                                      return Text(
-                                        snapshot.data ?? 'N/A',
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          color: Color(0xFF101828),
+                                      return Container(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 70,
+                                        ),
+                                        child: Text(
+                                          snapshot.data ?? 'N/A',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            color: Color(0xFF101828),
+                                          ),
                                         ),
                                       );
                                     }
@@ -532,7 +538,7 @@ class _BudgetPageScressState extends State<AddFeelPageScreen> {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
                                       return const Text(
-                                        '加载中...',
+                                        'Loading...',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Color(0xFF747688),
@@ -540,7 +546,7 @@ class _BudgetPageScressState extends State<AddFeelPageScreen> {
                                       );
                                     } else if (snapshot.hasError) {
                                       return const Text(
-                                        '出错了',
+                                        'Something went wrong',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Color(0xFF747688),

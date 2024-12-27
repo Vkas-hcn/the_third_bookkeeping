@@ -25,8 +25,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.1
   url_launcher: ^6.1.0
   intl: ^0.19.0
-  auto_size_text: ^3.0.0
-
+  share_plus: ^6.3.0
 
 flutter:
   fonts:

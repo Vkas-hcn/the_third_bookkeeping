@@ -39,9 +39,20 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
   String balance = "";
   List<Map<String, dynamic>> filteredData = [];
   Map<String, double> dailyBalances = {}; // 存储每天的余额
+  bool isCalendarExpanded = false;
+  ScrollController scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    scrollController.addListener(() {
+      if (scrollController.position.userScrollDirection == ScrollDirection.reverse) {
+        setState(() {
+          isCalendarExpanded = false; // 收起日历
+        });
+      } else if (scrollController.position.userScrollDirection == ScrollDirection.forward) {
+      }
+    });
     nowDate = DateFormat('yyyy-MM').format(selectedDate);
     nowDateDay = DateFormat('yyyy-MM-dd').format(selectedDate);
     getBillsByDate(nowDateDay,false);
@@ -50,6 +61,7 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
   @override
   void dispose() {
     super.dispose();
+    scrollController.dispose();
   }
 
   void getBillsByDate(String date, bool isRefresh) async {
@@ -135,6 +147,13 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
             balance = "0.0";
           });
         }
+      }else{
+        setState(() {
+          filteredData = [];
+          income = "0.0";
+          expense = "0.0";
+          balance = "0.0";
+        });
       }
     } catch (e) {
       print("解析 JSON 失败: $e");
@@ -210,10 +229,7 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
         selectedDate = DateTime(newMonth.year, newMonth.month, 1);
       });
     } catch (e) {
-      // 输入解析错误处理
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('输入格式错误，请使用 yyyy-MM 格式')),
-      );
+
     }
   }
 
@@ -272,6 +288,7 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
             children: [
               const SizedBox(height: 40),
               Row(
@@ -340,7 +357,9 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Expanded(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: isCalendarExpanded ? 300 : 150,
                 child: GridView.builder(
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -403,6 +422,28 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              if(!isCalendarExpanded)
+              GestureDetector(
+                onTap: (){
+                  setState(() {
+                    isCalendarExpanded = !isCalendarExpanded; // 收起日历
+                  });
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  width: double.infinity,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/img/ic_xiala.png'),
+                      fit: BoxFit.cover,
+                    )
+                  ),
+                  child: null,
+                ),
+              ),
+              const SizedBox(height: 12),
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12),
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -431,102 +472,128 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                        image: DecorationImage(
-                      image: AssetImage('assets/img/ic_pet_bg.webp'),
-                      fit: BoxFit.fill,
-                    )),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 15.0, horizontal: 15),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Balance',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF747688),
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: const BoxDecoration(
+                          image: DecorationImage(
+                        image: AssetImage('assets/img/ic_pet_bg.webp'),
+                        fit: BoxFit.fill,
+                      )),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 15.0, horizontal: 15),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Balance',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF747688),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            balance,
-                            style: const TextStyle(
-                              fontFamily: 'sf',
-                              fontSize: 16,
-                              color: Color(0xFF101828),
+                            const SizedBox(height: 3),
+                            Container(
+                              constraints: const BoxConstraints(
+                                maxWidth: 100,
+                              ),
+                              child: Text(
+                                balance,
+                                style: const TextStyle(
+                                  fontFamily: 'sf',
+                                  fontSize: 16,
+                                  color: Color(0xFF101828),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  Container(
-                    decoration: const BoxDecoration(
-                        image: DecorationImage(
-                      image: AssetImage('assets/img/ic_pet_bg.webp'),
-                      fit: BoxFit.fill,
-                    )),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 15.0, horizontal: 15),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Expenses',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF747688),
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                          image: DecorationImage(
+                        image: AssetImage('assets/img/ic_pet_bg.webp'),
+                        fit: BoxFit.fill,
+                      )),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 15.0, horizontal: 15),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Expenses',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF747688),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            expense,
-                            style: const TextStyle(
-                              fontFamily: 'sf',
-                              fontSize: 16,
-                              color: Color(0xFF101828),
+                            const SizedBox(height: 3),
+                            Container(
+                              constraints: const BoxConstraints(
+                                maxWidth: 100,
+                              ),
+                              child: Text(
+                                expense,
+                                style: const TextStyle(
+                                  fontFamily: 'sf',
+                                  fontSize: 16,
+                                  color: Color(0xFF101828),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  Container(
-                    decoration: const BoxDecoration(
-                        image: DecorationImage(
-                      image: AssetImage('assets/img/ic_pet_bg.webp'),
-                      fit: BoxFit.fill,
-                    )),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 15.0, horizontal: 15),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Income',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF747688),
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: const BoxDecoration(
+                          image: DecorationImage(
+                        image: AssetImage('assets/img/ic_pet_bg.webp'),
+                        fit: BoxFit.fill,
+                      )),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 15.0, horizontal: 15),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Income',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF747688),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            income,
-                            style: const TextStyle(
-                              fontFamily: 'sf',
-                              fontSize: 16,
-                              color: Color(0xFF101828),
+                            const SizedBox(height: 3),
+                            Container(
+                              constraints: const BoxConstraints(
+                                maxWidth: 100,
+                              ),
+                              child: Text(
+                                income,
+                                style: const TextStyle(
+                                  fontFamily: 'sf',
+                                  fontSize: 16,
+                                  color: Color(0xFF101828),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -546,6 +613,7 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
                   ),
                   child:
                   ListView.builder(
+                    controller: scrollController,
                     itemCount: filteredData.length,
                     itemBuilder: (context, index) {
                       final bill = filteredData[index];
@@ -554,7 +622,7 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
                         title: Text(bill['name']),
                         subtitle: Container(
                           constraints: const BoxConstraints(
-                            maxWidth: 200,
+                            maxWidth: 100,
                           ),
                           child: Text(bill["note"].isEmpty
                               ? "none"
@@ -565,7 +633,7 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
                           children: [
                             Container(
                               constraints: const BoxConstraints(
-                                maxWidth: 150,
+                                maxWidth: 80,
                               ),
                               child: Text(
                                 "${bill["isInCome"] ? "+" : "-"}${bill["num"]}",
@@ -574,7 +642,7 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
                                       ? const Color(0xFFA5BE69)
                                       : const Color(0xFFF79766),
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 24.0,
+                                  fontSize: 20.0,
                                 ),
                               ),
                             ),
@@ -599,14 +667,16 @@ class _BillPageScressState extends State<AddFeelPageScreen> {
               ),
               if(filteredData.isEmpty)
                 Expanded(
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: 155,
-                        height: 155,
-                        child: Image.asset('assets/img/ic_emp.webp'),
-                      ),
-                    ],
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: 155,
+                          height: 155,
+                          child: Image.asset('assets/img/ic_emp.webp'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

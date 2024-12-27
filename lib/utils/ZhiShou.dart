@@ -99,8 +99,8 @@ class RecordBean {
     await saveRecords(records);
   }
 
-  static Future<void> updateRecord(String recordId,
-      ZhiShouData updatedData) async {
+  static Future<void> updateRecord(
+      String recordId, ZhiShouData updatedData) async {
     List<RecordBean> records = await loadRecords();
     bool recordFound = false;
 
@@ -126,8 +126,8 @@ class RecordBean {
     await saveRecords(records);
   }
 
-  static Map<String, double> calculateDailyTotals(MonthData dailyData,
-      String dayKey) {
+  static Map<String, double> calculateDailyTotals(
+      MonthData dailyData, String dayKey) {
     double totalZhi = 0.0;
     double totalShou = 0.0;
 
@@ -149,7 +149,7 @@ class RecordBean {
 
   static Future<List<RecordBean>> loadRecords() async {
     final String? jsonStr =
-    await LocalStorage().getValue(LocalStorage.accountJson);
+        await LocalStorage().getValue(LocalStorage.accountJson);
     if (jsonStr != null && jsonStr.isNotEmpty) {
       List<dynamic> jsonList = json.decode(jsonStr);
       List<RecordBean> records = jsonList
@@ -158,12 +158,12 @@ class RecordBean {
 
       for (var record in records) {
         List<MapEntry<String, MonthData>> sortedEntries =
-        record.monthlyData.entries.toList()
-          ..sort((a, b) {
-            int dayA = int.parse(a.key);
-            int dayB = int.parse(b.key);
-            return dayB.compareTo(dayA);
-          });
+            record.monthlyData.entries.toList()
+              ..sort((a, b) {
+                int dayA = int.parse(a.key);
+                int dayB = int.parse(b.key);
+                return dayB.compareTo(dayA);
+              });
 
         record.monthlyData = Map.fromEntries(sortedEntries);
       }
@@ -208,20 +208,18 @@ class RecordBean {
 
   static Future<void> saveRecords(List<RecordBean> records) async {
     final String jsonStr =
-    json.encode(records.map((record) => record.toJson()).toList());
+        json.encode(records.map((record) => record.toJson()).toList());
     await LocalStorage().setValue(LocalStorage.accountJson, jsonStr);
   }
 
   void addDataByDate(String inputDate, bool isInCome, String num, String note,
-      List<RecordBean>? records, String icon, String name) {
+      List<RecordBean>? records, String icon, String name) async{
     DateTime inputDateTime = DateTime.parse(inputDate);
     //DateTime.parse(inputDate)转换成2020-12-01
     String dayString =
-        '${inputDateTime.year}-${inputDateTime.month.toString().padLeft(
-        2, '0')}-${inputDateTime.day.toString().padLeft(2, '0')}';
+        '${inputDateTime.year}-${inputDateTime.month.toString().padLeft(2, '0')}-${inputDateTime.day.toString().padLeft(2, '0')}';
     String monthString =
-        '${inputDateTime.year}-${inputDateTime.month.toString().padLeft(
-        2, '0')}'; // 2024-10
+        '${inputDateTime.year}-${inputDateTime.month.toString().padLeft(2, '0')}'; // 2024-10
     String day = inputDateTime.day.toString();
 
     if (records == null || records.isEmpty) {
@@ -238,20 +236,18 @@ class RecordBean {
     }
 
     if (currentMonthRecord == null) {
+      String yuDef = await LocalStorage().getYuData();
       String prevMonthString =
           "${inputDateTime.year}-${inputDateTime.month - 1}";
       RecordBean? prevMonthRecord = records.firstWhere(
-            (record) => record.dateMonth == prevMonthString,
+        (record) => record.dateMonth == prevMonthString,
         orElse: () =>
-            RecordBean(monthlyData: {}, dateMonth: monthString, yu: '50'),
+            RecordBean(monthlyData: {}, dateMonth: monthString, yu: yuDef),
       );
-
-      String newYuValue = prevMonthRecord != null ? prevMonthRecord.yu : '50';
-
       currentMonthRecord = RecordBean(
         monthlyData: {},
         dateMonth: monthString,
-        yu: newYuValue,
+        yu: yuDef,
       );
       records.add(currentMonthRecord);
     }
@@ -267,17 +263,14 @@ class RecordBean {
       num: num,
       isInCome: isInCome,
       note: note,
-      id: DateTime
-          .now()
-          .millisecondsSinceEpoch
-          .toString(),
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
       icon: icon,
       name: name,
       date: dayString,
     ));
 
     final String jsonStr =
-    json.encode(records.map((record) => record.toJson()).toList());
+        json.encode(records.map((record) => record.toJson()).toList());
     print("object==jsonStr==${jsonStr}");
     saveRecords(records);
   }
@@ -391,8 +384,7 @@ class RecordBean {
     print("totalExpense====${totalExpense}");
     print("totalIncome * 100====${totalIncome}");
     print(
-        "bbbbbbbbbbbb====${(totalExpense / totalIncome * 100).toStringAsFixed(
-            2)}");
+        "bbbbbbbbbbbb====${(totalExpense / totalIncome * 100).toStringAsFixed(2)}");
     double value = double.parse(targetRecord.yu);
     return {
       "income": "+${totalIncome.toStringAsFixed(2)}",
@@ -401,8 +393,8 @@ class RecordBean {
           ? "+${balance.toStringAsFixed(2)}"
           : balance.toStringAsFixed(2),
       "budget": targetRecord.yu,
-      "expenditurePercentage":
-      "${(totalExpense / value * 100).toStringAsFixed(2)}%",
+      "expenditurePercentage":value==0?"100%":
+          "${(totalExpense / value * 100).toStringAsFixed(2)}%",
     };
   }
 
@@ -460,7 +452,70 @@ class RecordBean {
     return totalAmount;
   }
 
-  static Future<Map<String, double>> calculateStatistics(String year, int staticTypeInt) async {
+  static Future<double> getCategoryTotalByYear(
+      String year, String cateName) async {
+    double totalAmount = 0.0; // 输入分类的总金额
+    List<RecordBean> recordBeanList = await loadRecords();
+
+    // 遍历记录，过滤属于指定年份的记录
+    for (RecordBean record in recordBeanList) {
+      if (record.dateMonth.startsWith(year)) {
+        // 确保记录属于指定年份
+        // 遍历当月的每日数据
+        record.monthlyData.forEach((day, monthData) {
+          for (var zhiShouData in monthData.zhiShouList) {
+            // 只计算与传入的分类名称匹配的数据
+            if (zhiShouData.name == cateName) {
+              double amount = double.tryParse(zhiShouData.num) ?? 0.0;
+              totalAmount += amount; // 累加分类的总金额
+            }
+          }
+        });
+      }
+    }
+
+    return totalAmount;
+  }
+
+  static Future<double> getCategoryProportion(String data, bool isYear,bool isInCome) async {
+    double totalAmount = 0.0; // 输入分类的总金额
+    List<RecordBean> recordBeanList = await loadRecords();
+    if (isYear) {
+      for (RecordBean record in recordBeanList) {
+        if (record.dateMonth.startsWith(data)) {
+          // 遍历当月的每日数据
+          record.monthlyData.forEach((day, monthData) {
+            for (var zhiShouData in monthData.zhiShouList) {
+              if (zhiShouData.isInCome == isInCome) {
+                double amount = double.tryParse(zhiShouData.num) ?? 0.0;
+                totalAmount += amount; // 累加分类的总金额
+              }
+            }
+          });
+        }
+      }
+    } else {
+      RecordBean? recordToUpdate = getDataByMonth(data, recordBeanList);
+      if (recordToUpdate == null) {
+        return 0.0;
+      }
+
+      // 遍历当月的每日数据
+      recordToUpdate.monthlyData.forEach((day, monthData) {
+        for (var zhiShouData in monthData.zhiShouList) {
+          if (zhiShouData.isInCome == isInCome) {
+            double amount = double.tryParse(zhiShouData.num) ?? 0.0;
+            totalAmount += amount; // 累加分类的总金额
+          }
+        }
+      });
+    }
+
+    return totalAmount;
+  }
+
+  static Future<Map<String, double>> calculateStatistics(
+      String year, int staticTypeInt) async {
     // 加载记录
     List<RecordBean> recordBeanList = await loadRecords();
 
@@ -502,7 +557,8 @@ class RecordBean {
     };
   }
 
-  static Future<Map<String, double>> calculateMonthlyStatistics(String month, int staticTypeInt) async {
+  static Future<Map<String, double>> calculateMonthlyStatistics(
+      String month, int staticTypeInt) async {
     // 加载记录
     List<RecordBean> recordBeanList = await loadRecords();
 
@@ -543,13 +599,12 @@ class RecordBean {
 
     // 计算统计结果
     double avgWeekly = double.parse((totalAmount / 4).toStringAsFixed(2));
-    double avgDaily = double.parse((totalAmount / daysInMonth).toStringAsFixed(2));
+    double avgDaily =
+        double.parse((totalAmount / daysInMonth).toStringAsFixed(2));
     return {
       "This Year": totalAmount,
       "Avg. Monthly": avgWeekly,
       "Avg. Daily": avgDaily,
     };
   }
-
-
 }

@@ -34,4 +34,25 @@ class ThirdUtils {
     }
   }
 
+
+  static List<String> getAccListTextDataZong() {
+      // income
+      return AccountData.dataTextZong;
+  }
+
+  static List<String> getAccListImageDataZong() {
+      return AccountData.dataImageZong;
+  }
+//是否是收入
+  static bool isIncome(String category) {
+    if (AccountData.expensesText.any((element) => element == category)) {
+      return false;
+    }
+    if (AccountData.incomeText.any((element) => element == category)) {
+      return true;
+    }
+    // 如果 category 既不在 expensesText 也不在 incomeText 中，可以返回一个默认值，比如 false
+    return false;
+  }
+
 }
